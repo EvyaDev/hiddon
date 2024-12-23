@@ -1,28 +1,39 @@
-// const authGuard = require("./auth-guard");
-// const { uploadFile, getFile } = require("./files");
-// const { getMessagesByUserName } = require("./messages");
-// const { signUser, loginUser, getUserById, getUserByToken, getAllUsers, changeName } = require("./users");
+const { query } = require('express');
+const db = require('./dbConnect'); // ייבוא פונקציית החיבור למסד הנתונים
+
 
 module.exports = (app) => {
 
     //GET Methods
     app.get('/', (req, res) => { res.send("Welcome to API hiddon server") });
 
-    // app.get('/login', authGuard, async (req, res) => {
-    //     const user = getUserByToken(req);
-    //     res.send(user);
-    // });
+    // מסלול לדוגמה לקריאת נתונים ממסד הנתונים
+    app.get('/users', async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM users'); // החלף את 'users' בשם הטבלה שלך
+            res.json(result.rows); // החזרת התוצאות בפורמט JSON
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            res.status(500).send('Error fetching data from database');
+        }
+    });
 
-    // app.get('/my-messages/:userName', authGuard, getMessagesByUserName);
-    // app.get('/users', getAllUsers);
-    // app.get('/user/:id', getUserById);
-    // app.get('/file/:name', getFile);
+    const addUser = async (username, email) => {
+        try {
+            const result = await db.query( // השתמש ב-db.query
+                'INSERT INTO users (username, email) VALUES ($1, $2) RETURNING *',
+                [username, email]
+            );
+            return result.rows[0]; // החזרת המשתמש שנוסף
+        } catch (err) {
+            console.error('Error adding user:', err);
+            throw err; // זרוק את השגיאה כדי שתוכל לטפל בה במקום אחר
+        }
+    };
 
-    // //POST Methods
-    // app.post('/signup', signUser);
-    // app.post('/login', loginUser);
-    // app.post('/file/upload', uploadFile);
-
-    // //PUT Methods
-    // app.put('/user', changeName);
+    app.post('/users', async (req, res) => {
+        const { username, email } = req.body;
+        const newUser = await addUser(username, email);
+        res.json(newUser);
+    });
 }
