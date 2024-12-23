@@ -6,7 +6,7 @@
 module.exports = (app) => {
 
     //GET Methods
-    app.get('/', (req, res) => { res.send("Welcome to API server") });
+    app.get('/', (req, res) => { res.send("Welcome to API hiddon server") });
 
     // app.get('/login', authGuard, async (req, res) => {
     //     const user = getUserByToken(req);
