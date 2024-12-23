@@ -1,44 +1,28 @@
-const express = require("express")
-const cors = require("cors");
+const express = require('express');
+const db = require('./dbConnect'); // ייבוא פונקציית החיבור למסד הנתונים
+
 const app = express();
-// const { con } = require("./db_connect");
-const { Server } = require("socket.io");
-// const customLogger = require('./customLogger');
-const morgan = require('morgan');
-const http = require("http");
-const fs = require('fs');
-const path = require('path');
-const server = http.createServer(app);
+const PORT = process.env.PORT || 4000; // השרת יאזין לפורט מסוים
 
+// מסלול בדיקה כדי לוודא שהשרת עובד
+app.get('/', (req, res) => {
+    res.send('Server is running!');
+});
 
-app.use(express.json());
-
-const io = new Server(server, {
-    cors: {
-        origin: true,
-        methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
-        credentials: true,
-        allowedHeaders: 'Authorization,content-type,accept',
+// מסלול לדוגמה לקריאת נתונים ממסד הנתונים
+app.get('/users', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM users'); // החלף את 'users' בשם הטבלה שלך
+        res.json(result.rows); // החזרת התוצאות בפורמט JSON
+    } catch (err) {
+        console.error('Error fetching data:', err);
+        res.status(500).send('Error fetching data from database');
     }
 });
 
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'methods.log'), { flags: 'a' })
-app.use(morgan(':method - url: ":url" status: :status | (:response-time ms) [:date[web]]', { stream: accessLogStream }))
+// הפעלת השרת
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
 
-
-// con().catch(err => console.log(err));
-
-app.use(cors({
-    origin: true,
-    methods: 'GET,PUT,POST,DELETE,OPTIONS',
-    credentials: true,
-    allowedHeaders: 'Authorization,content-type,accept',
-}));
-
-server.listen(4000, () => {
-    console.log("the server is run...")
-
-})
-
-// require("./socket")(io);
-require("./router")(app);
+// require("./router")(app);
